@@ -43,7 +43,7 @@ struct mind_data
 #include "MINDSSCbox.h"
 #include "dataCostD.h"
 
-void deeds(float *im1, float *im1b, float *warped1, int m, int n, int o, float alpha, int levels, bool verbose)
+void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, int o, float alpha, int levels, bool verbose)
 {
     vector<int> grid_spacing = {8, 7, 6, 5, 4};
     vector<int> search_radius = {8, 7, 6, 5, 4};
@@ -291,7 +291,7 @@ void deeds(float *im1, float *im1b, float *warped1, int m, int n, int o, float a
 
     upsampleDeformationsCL(ux, vx, wx, u1, v1, w1, m, n, o, m1, n1, o1);
 
-    float *flow = new float[sz1 * 3];
+    //float *flow = new float[sz1 * 3]; //Allocated outside
     for (int i = 0; i < sz1; i++)
     {
         flow[i] = u1[i];

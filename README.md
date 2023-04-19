@@ -19,7 +19,7 @@ If you use this implementation or parts of it please cite:
  
 ## Installation
 ```
-pip install git+https://github.com/wiktorowski211/deeds-registration
+pip install git+https://github.com/supratikbose/deeds-registration
 ```
 
 ## Usage
@@ -30,7 +30,9 @@ import SimpleITK as sitk
 fixed = sitk.ReadImage(PATH)
 moving = sitk.ReadImage(PATH)
 
-moved = registration(fixed, moving)
+#In the return value moved  is sitk image but flow_3channel_np is 3 channel numpy array
+
+moved, flow_3channel_np = registration(fixed, moving)
 ```
 
 ## Prerequesities
