@@ -26,13 +26,14 @@ def registration(fixed, moving, alpha=1.6, levels=5, verbose=True):
     origin_type = moving_np.dtype
 
     shape = moving_np.shape
-
+    
+    flow_1channel_np=np.zeros(moving_np.shape)
+    flow_3channel_np=np.repeat(flow_1channel_np[np.newaxis,:,:,:], 3, axis=0)
+    flow_3channel_shape=flow_3channel_np.shape    
+    
     fixed_np = fixed_np.flatten().astype(np.float32)
     moving_np = moving_np.flatten().astype(np.float32)
     moved_np = np.zeros(moving_np.shape).flatten().astype(np.float32)
-    flow_1channel_np=np.zeros(moving_np.shape)
-    flow_3channel_np=np.repeat(flow_1channel_np[np.newaxis,:,:,:], 3, axis=0)
-    flow_3channel_shape=flow_3channel_np.shape
     flow_3channel_np=flow_3channel_np.flatten().astype(np.float32)
 
     deeds_cpp(fixed_np, moving_np, moved_np, flow_3channel_np, shape, alpha, levels, verbose)
