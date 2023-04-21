@@ -19,9 +19,9 @@ def deeds_cpp(np.ndarray[np.float32_t, ndim=1] fixed,
                   alpha, level, verbose)
 
 
-def registration(fixed, moving, alpha=1.6, levels=5, verbose=True):
-    fixed_np = to_numpy(fixed)
-    moving_np = to_numpy(moving)
+def registration(fixed_vol_np, moving_vol_np, alpha=1.6, levels=5, verbose=True):
+    fixed_np = fixed_vol_np.copy() #to_numpy(fixed)
+    moving_np = moving_vol_np.copy() #to_numpy(moving)
 
     origin_type = moving_np.dtype
 
@@ -41,8 +41,8 @@ def registration(fixed, moving, alpha=1.6, levels=5, verbose=True):
     moved_np = np.reshape(moved_np, shape).astype(origin_type)
     flow_3channel_np = np.reshape(flow_3channel_np, flow_3channel_shape).astype(origin_type)
 
-    moved = to_sitk(moved_np, ref_img=fixed)
-    return moved, flow_3channel_np
+    moved_vol_np = moved_np.copy() #to_sitk(moved_np, ref_img=fixed)
+    return moved_vol_np, flow_3channel_np
 
 
 def to_numpy(img):
