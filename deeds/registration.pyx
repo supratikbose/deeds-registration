@@ -39,7 +39,7 @@ def registration(fixed_vol_np, moving_vol_np, alpha=1.6, levels=5, verbose=True)
     deeds_cpp(fixed_np, moving_np, moved_np, flow_3channel_np, shape, alpha, levels, verbose)
 
     moved_np = np.reshape(moved_np, shape).astype(origin_type)
-    flow_3channel_np = np.reshape(flow_3channel_np, flow_3channel_shape).astype(origin_type)
+    flow_3channel_np = np.reshape(flow_3channel_np, flow_3channel_shape)#.astype(origin_type)
 
     moved_vol_np = moved_np.copy() #to_sitk(moved_np, ref_img=fixed)
     return moved_vol_np, flow_3channel_np
