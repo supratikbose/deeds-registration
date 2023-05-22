@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <chrono>
 #include <bitset>
+#include <zlib.h>
 
 using namespace std;
 
@@ -43,7 +44,8 @@ struct mind_data
 #include "MINDSSCbox.h"
 #include "dataCostD.h"
 
-void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, int o, float alpha, int levels, bool verbose)
+//void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, int o, float alpha, int levels, bool verbose)
+void deeds(float *im1, float *im1b, float *warped1, float *flow_U, float *flow_V, float *flow_W, int m, int n, int o, float alpha, int levels, bool verbose)
 {
     vector<int> grid_spacing = {8, 7, 6, 5, 4};
     vector<int> search_radius = {8, 7, 6, 5, 4};
@@ -291,16 +293,18 @@ void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, i
 
     upsampleDeformationsCL(ux, vx, wx, u1, v1, w1, m, n, o, m1, n1, o1);
 
-    //float *flow = new float[sz1 * 3]; //Allocated outside
+
+    float *flow = new float[sz1 * 3];
     for (int i = 0; i < sz1; i++)
     {
-        flow[i] = u1[i];
-        flow[i + sz1] = v1[i];
-        flow[i + sz1 * 2] = w1[i];
+        flow[i] = u1[i]; flow_U[i] = u1[i];
+        flow[i + sz1] = v1[i]; flow_V[i] = v1[i];
+        flow[i + sz1 * 2] = w1[i]; flow_W[i] = w1[i];
         // flow[i+sz1*3]=u1i[i]; flow[i+sz1*4]=v1i[i]; flow[i+sz1*5]=w1i[i];
     }
 
-    // WRITE OUTPUT DISPLACEMENT FIELD AND IMAGE
+    // WRITE OUTPUT DISPLACEMENT FIELD AND IMAGE IS REMOVES  IN THIS VERSION
+
     warpAffine(warped1, im1, im1b, X, ux, vx, wx);
 
     for (int i = 0; i < sz; i++)

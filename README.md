@@ -44,7 +44,7 @@ Build:
 python setup.py build_ext --inplace
 ```
 ## Test
-Test (TODO Update needed. May not work):
+Test ( The -m flag is necessary to  import from "local" registration module.):
 ```
 python -m unittest 
 ```

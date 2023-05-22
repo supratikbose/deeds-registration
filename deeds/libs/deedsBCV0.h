@@ -1,1 +1,1 @@
-void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, int o, float alpha, int levels, bool verbose);
+void deeds(float *im1, float *im1b, float *warped1, float *flow_U, float *flow_V, float *flow_W, int m, int n, int o, float alpha, int levels, bool verbose);
