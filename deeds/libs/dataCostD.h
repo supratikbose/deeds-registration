@@ -320,24 +320,28 @@ void warpAffineS(short *warped, short *input, float *X, float *u1, float *v1, fl
 }
 void warpAffine(float *warped, float *input, float *im1b, float *X, float *u1, float *v1, float *w1)
 {
-    int m = image_m;
-    int n = image_n;
-    int o = image_o;
+    //shape[2], shape[1], shape[0] => (m,n,o)
+    //In the passed numpy array,  shape: (depth, height, width)=(o,n,m)
+    int m = image_m;//shape[2] <-- width and fastest traversal
+    int n = image_n;//shape[1] <-- height and medium traversal
+    int o = image_o;//shape[0] <-- Depth and slowest traversal 
     int sz = m * n * o;
 
     float ssd = 0;
     float ssd0 = 0;
     float ssd2 = 0;
 
-    for (int k = 0; k < o; k++)
+    for (int k = 0; k < o; k++) // Loop over shape[0] = depth
     {
-        for (int j = 0; j < n; j++)
+        for (int j = 0; j < n; j++) // Loop over shape[1] = height
         {
-            for (int i = 0; i < m; i++)
+            for (int i = 0; i < m; i++) // Loop over shape[2] = width <-- fastest moving along row
             {
-
+                //Change in y is determined by v1
                 float y1 = (float)i * X[0] + (float)j * X[1] + (float)k * X[2] + (float)X[3] + v1[i + j * m + k * m * n];
+                //Change in x is determined by u1
                 float x1 = (float)i * X[4] + (float)j * X[5] + (float)k * X[6] + (float)X[7] + u1[i + j * m + k * m * n];
+                //Change in z is determined by w1
                 float z1 = (float)i * X[8] + (float)j * X[9] + (float)k * X[10] + (float)X[11] + w1[i + j * m + k * m * n];
                 int x = floor(x1);
                 int y = floor(y1);

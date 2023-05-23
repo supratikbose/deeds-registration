@@ -293,14 +293,22 @@ void deeds(float *im1, float *im1b, float *warped1, float *flow_U, float *flow_V
 
     upsampleDeformationsCL(ux, vx, wx, u1, v1, w1, m, n, o, m1, n1, o1);
 
+    cout << "Flow stat: m*n*o " << m*n*o << " sz " << sz << " m1*n1*o1 " << m1*n1*o1  << " sz1 " << sz1 << "\n";
 
     float *flow = new float[sz1 * 3];
     for (int i = 0; i < sz1; i++)
     {
-        flow[i] = u1[i]; flow_U[i] = u1[i];
-        flow[i + sz1] = v1[i]; flow_V[i] = v1[i];
-        flow[i + sz1 * 2] = w1[i]; flow_W[i] = w1[i];
+        flow[i] = u1[i];
+        flow[i + sz1] = v1[i];
+        flow[i + sz1 * 2] = w1[i];
         // flow[i+sz1*3]=u1i[i]; flow[i+sz1*4]=v1i[i]; flow[i+sz1*5]=w1i[i];
+    }
+    //Give out upsampled deformation : Note sz = m*n*o
+    for (int i = 0; i < sz; i++)
+    {
+        flow_U[i] = ux[i];
+        flow_V[i] = vx[i];
+        flow_W[i] = wx[i];
     }
 
     // WRITE OUTPUT DISPLACEMENT FIELD AND IMAGE IS REMOVES  IN THIS VERSION
