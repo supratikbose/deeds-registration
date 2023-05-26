@@ -45,7 +45,16 @@ struct mind_data
 #include "dataCostD.h"
 
 //void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, int o, float alpha, int levels, bool verbose)
-void deeds(float *im1, float *im1b, float *warped1, float *flow_U, float *flow_V, float *flow_W, int m, int n, int o, float alpha, int levels, bool verbose)
+// void _deeds(int *depth_out)
+// {
+//     *depth_out=100;
+// }
+void deeds(float *im1, float *im1b, float *warped1, 
+    float *flow_W_out, float *flow_V_out, float *flow_U_out,
+    int *depth_out, int *height_out, int *width_out, 
+    int depth_in, int height_in, int width_in,
+    bool defVectorResampledToVolume_in, 
+    float alpha, int levels, bool verbose)
 {
     vector<int> grid_spacing = {8, 7, 6, 5, 4};
     vector<int> search_radius = {8, 7, 6, 5, 4};
@@ -58,7 +67,11 @@ void deeds(float *im1, float *im1b, float *warped1, float *flow_U, float *flow_V
     cout << "=============================================================\n";
 
     RAND_SAMPLES = 1; // fixed/efficient random sampling strategy
-
+    ////////////////////
+    int m = width_in;
+    int n = height_in;
+    int o = depth_in;
+    ////////////////////
     image_m = m;
     image_n = n;
     image_o = o;
@@ -295,20 +308,33 @@ void deeds(float *im1, float *im1b, float *warped1, float *flow_U, float *flow_V
 
     cout << "Flow stat: m*n*o " << m*n*o << " sz " << sz << " m1*n1*o1 " << m1*n1*o1  << " sz1 " << sz1 << "\n";
 
-    float *flow = new float[sz1 * 3];
-    for (int i = 0; i < sz1; i++)
+    if (!defVectorResampledToVolume_in)
     {
-        flow[i] = u1[i];
-        flow[i + sz1] = v1[i];
-        flow[i + sz1 * 2] = w1[i];
-        // flow[i+sz1*3]=u1i[i]; flow[i+sz1*4]=v1i[i]; flow[i+sz1*5]=w1i[i];
+        //int *depth_out, int *height_out, int *width_out,
+        *depth_out=m1; //*
+        *height_out=n1;//*
+        *width_out=o1; //*
+        //float *flow = new float[sz1 * 3];float *flow_W_out, float *flow_V_out, float *flow_U_out,
+        for (int i = 0; i < sz1; i++)
+        {
+            flow_U_out[i] = u1[i];//flow[i] = u1[i];
+            flow_V_out[i] = v1[i];//flow[i + sz1] = v1[i];
+            flow_W_out[i] = w1[i];//flow[i + sz1 * 2] = w1[i];
+            // flow[i+sz1*3]=u1i[i]; flow[i+sz1*4]=v1i[i]; flow[i+sz1*5]=w1i[i];
+        }        
     }
-    //Give out upsampled deformation : Note sz = m*n*o
-    for (int i = 0; i < sz; i++)
+    else 
     {
-        flow_U[i] = ux[i];
-        flow_V[i] = vx[i];
-        flow_W[i] = wx[i];
+        //Give out upsampled deformation : Note sz = m*n*o
+        *depth_out=m; //*
+        *height_out=n; //*
+        *width_out=o; //*        
+        for (int i = 0; i < sz; i++)
+        {
+            flow_U_out[i] = ux[i];
+            flow_V_out[i] = vx[i];
+            flow_W_out[i] = wx[i];
+        }
     }
 
     // WRITE OUTPUT DISPLACEMENT FIELD AND IMAGE IS REMOVES  IN THIS VERSION

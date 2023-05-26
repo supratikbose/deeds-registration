@@ -31,8 +31,10 @@ fixed_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(fixed_PATH))
 moving_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(moving_PATH))
 
 #In the return value  moved_vol_np  is single channel np array  and flow_3channel_np is 3 channel numpy array
-
-moved_vol_np, flow_3channel_np = registration(fixed_vol_np, moving_vol_np)
+#It is assumed that in the shape, 1st dimension is depth(Z) followed by height(Y) and width(Z)
+#In the 3 channel deformation vector, 1st channel is Ux (along X), 2nd channel is Vy(along Y) and last channel is Wz (along Z)
+#defVectorResampledToVolume_in is typically false so defVec dimension is less than image dimension
+moved_vol_np, flow_3channel_np = registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=False, alpha=1.6, levels=5, verbose=True)
 ```
 
 ## Prerequesities

@@ -11,11 +11,13 @@ class TestStringMethods(unittest.TestCase):
     def test_deeds_registration(self):
         fixed = nib.load('samples/fixed.nii.gz').get_fdata() 
         moving = nib.load('samples/moving.nii.gz').get_fdata() 
-        vol_MStar_Deeds, deformVec_Deeds = registration(fixed, moving)
-        mse_b4Def = mse(fixed, moving)
+        vol_MStar_Deeds, deformVec_Deeds, defVecShape = registration(moving, fixed)
+        print(f'defVecShape {defVecShape}')
+        mse_b4Def = mse(fixed,  moving,)
         mse_afterDef = mse(fixed, vol_MStar_Deeds)
         print(f"MSE B4:{round(mse_b4Def,4)} after: {round(mse_afterDef,4)}")
         np.savez_compressed('samples/deedsResultTmp.npz',vol_MStar_Deeds=vol_MStar_Deeds, deformVec_Deeds=deformVec_Deeds) 
+
 
     # def test_deeds_registration(self):
     #     usePreCreatedSynthetic=True
@@ -41,7 +43,7 @@ class TestStringMethods(unittest.TestCase):
     #         vol_M = nib.load('samples/synthetic_vol_M.nii.gz').get_fdata().astype('float32')
     #         vol_F = nib.load('samples/synthetic_vol_F.nii.gz').get_fdata().astype('float32')
     #     print(f'Invoking deeds')
-    #     vol_MStar_Deeds, deformVec_Deeds = registration(vol_F, vol_M)
+    #     vol_MStar_Deeds, deformVec_Deeds, defVecShape = registration(vol_M, vol_F)
     #     mse_b4Def = mse(vol_F, vol_M)
     #     mse_afterDef = mse(vol_F, vol_MStar_Deeds)
     #     print(f"MSE B4:{round(mse_b4Def,4)} after: {round(mse_afterDef,4)}")
