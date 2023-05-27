@@ -6,7 +6,8 @@ import numpy as np
 cimport numpy as np
 
 cdef extern from "libs/deedsBCV0.h":
-    void deeds(float *im1, float *im1b, float *warped1_out, 
+    void deeds(float *im1, float *im1b, float *warped1_out,
+        float *flow_flattened_out, 
         float *flow_W_out, float *flow_V_out, float *flow_U_out,   
         int *depth_out, int *height_out, int *width_out, 
         int depth_in, int height_in, int width_in, 
@@ -17,6 +18,7 @@ cdef extern from "libs/deedsBCV0.h":
 def deeds_cpp(np.ndarray[np.float32_t, ndim=1] moving,
               np.ndarray[np.float32_t, ndim=1] fixed,
               np.ndarray[np.float32_t, ndim=1] moved,
+              np.ndarray[np.float32_t, ndim=1] flow_flattened_out,
               np.ndarray[np.float32_t, ndim=1] flow_W_out,  
               np.ndarray[np.float32_t, ndim=1] flow_V_out,  
               np.ndarray[np.float32_t, ndim=1] flow_U_out,        
@@ -34,6 +36,7 @@ def deeds_cpp(np.ndarray[np.float32_t, ndim=1] moving,
     cdef int *p_width_out = &width_out
 
     deeds(&moving[0], &fixed[0], &moved[0], 
+        &flow_flattened_out[0],
         &flow_W_out[0],  &flow_V_out[0], &flow_U_out[0],
         p_depth_out,  p_height_out, p_width_out, 
         shape[0], shape[1], shape[2], 
@@ -53,16 +56,16 @@ def registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=Fals
     moved_np = np.zeros(moving_np.shape).flatten().astype(np.float32)  
 
     inputSize = shape[0] * shape[1] * shape[2]
+    flow_flattened_out_np    = np.zeros(3*inputSize, np.float32)
     flow_W_out_flatten  = np.zeros(inputSize, np.float32)
     flow_V_out_flatten  = np.zeros(inputSize, np.float32)
     flow_U_out_flatten  = np.zeros(inputSize, np.float32)
     
-    
-
     depth_out, height_out, width_out = deeds_cpp( 
         moving_np,
         fixed_np, 
-        moved_np, 
+        moved_np,
+        flow_flattened_out_np, 
         flow_W_out_flatten, 
         flow_V_out_flatten, 
         flow_U_out_flatten, 
@@ -79,6 +82,7 @@ def registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=Fals
     else:
         defVecSize = depth_out *  height_out * width_out #depth_out.item() *  height_out.item() * width_out.item()
         defVecShape = tuple([depth_out, height_out, width_out]) #tuple(depth_out.item(), height_out.item(), width_out.item())
+        flow_flattened_out_np = flow_flattened_out_np[:3*defVecSize]
         flow_W_out_flatten = flow_W_out_flatten[:defVecSize]
         flow_V_out_flatten = flow_V_out_flatten[:defVecSize]
         flow_U_out_flatten = flow_U_out_flatten[:defVecSize]
@@ -94,7 +98,7 @@ def registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=Fals
     flow_3channel_np = np.stack([flow_U_np, flow_V_np, flow_W_np], axis=0)
 
     # moved_vol_np = moved_np.copy() #to_sitk(moved_np, ref_img=fixed)
-    return moved_np.copy(), flow_3channel_np.copy(), defVecShape
+    return moved_np.copy(), flow_3channel_np.copy(), flow_flattened_out_np.copy(), defVecShape
 
 
 def to_numpy(img):

@@ -9,14 +9,17 @@ from ..registration import registration
 
 class TestStringMethods(unittest.TestCase):
     def test_deeds_registration(self):
-        fixed = nib.load('samples/fixed.nii.gz').get_fdata() 
-        moving = nib.load('samples/moving.nii.gz').get_fdata() 
-        vol_MStar_Deeds, deformVec_Deeds, defVecShape = registration(moving, fixed)
+        fixed = np.transpose(nib.load('samples/fixed.nii.gz').get_fdata().astype('float32'), (2,1,0)) #axial = depth = 1st axis
+        moving = np.transpose(nib.load('samples/moving.nii.gz').get_fdata().astype('float32'), (2,1,0)) #axial = depth = 1st axis 
+        vol_MStar_Deeds, deformVec_Deeds, deformVec_Deeds_flattened, defVecShape = registration(moving, fixed, False)
         print(f'defVecShape {defVecShape}')
         mse_b4Def = mse(fixed,  moving,)
         mse_afterDef = mse(fixed, vol_MStar_Deeds)
         print(f"MSE B4:{round(mse_b4Def,4)} after: {round(mse_afterDef,4)}")
-        np.savez_compressed('samples/deedsResultTmp.npz',vol_MStar_Deeds=vol_MStar_Deeds, deformVec_Deeds=deformVec_Deeds) 
+        deformVec_Deeds_flattened_reshaped = np.reshape(deformVec_Deeds_flattened, deformVec_Deeds.shape)
+        print(f'Shaped and flatten defVec close? {np.allclose(deformVec_Deeds_flattened_reshaped,deformVec_Deeds)}')
+        print(f'Sum of difference between shaped and flattened: {np.sum(deformVec_Deeds-deformVec_Deeds_flattened_reshaped)}')
+        np.savez_compressed('samples/deedsResultTmp.npz',vol_MStar_Deeds=vol_MStar_Deeds, deformVec_Deeds=deformVec_Deeds, deformVec_Deeds_flattened=deformVec_Deeds_flattened) 
 
 
     # def test_deeds_registration(self):

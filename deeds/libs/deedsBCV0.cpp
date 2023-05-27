@@ -44,12 +44,9 @@ struct mind_data
 #include "MINDSSCbox.h"
 #include "dataCostD.h"
 
-//void deeds(float *im1, float *im1b, float *warped1, float *flow, int m, int n, int o, float alpha, int levels, bool verbose)
-// void _deeds(int *depth_out)
-// {
-//     *depth_out=100;
-// }
-void deeds(float *im1, float *im1b, float *warped1, 
+
+void deeds(float *im1, float *im1b, float *warped1,
+    float *flow_flattened_out,
     float *flow_W_out, float *flow_V_out, float *flow_U_out,
     int *depth_out, int *height_out, int *width_out, 
     int depth_in, int height_in, int width_in,
@@ -310,6 +307,7 @@ void deeds(float *im1, float *im1b, float *warped1,
 
     if (!defVectorResampledToVolume_in)
     {
+        cout << "defVectorResampledToVolume_in " << defVectorResampledToVolume_in;
         //int *depth_out, int *height_out, int *width_out,
         *depth_out=m1; //*
         *height_out=n1;//*
@@ -317,23 +315,24 @@ void deeds(float *im1, float *im1b, float *warped1,
         //float *flow = new float[sz1 * 3];float *flow_W_out, float *flow_V_out, float *flow_U_out,
         for (int i = 0; i < sz1; i++)
         {
-            flow_U_out[i] = u1[i];//flow[i] = u1[i];
-            flow_V_out[i] = v1[i];//flow[i + sz1] = v1[i];
-            flow_W_out[i] = w1[i];//flow[i + sz1 * 2] = w1[i];
+            flow_U_out[i] = u1[i];flow_flattened_out[i] = u1[i];
+            flow_V_out[i] = v1[i];flow_flattened_out[i + sz1] = v1[i];
+            flow_W_out[i] = w1[i];flow_flattened_out[i + sz1 * 2] = w1[i];
             // flow[i+sz1*3]=u1i[i]; flow[i+sz1*4]=v1i[i]; flow[i+sz1*5]=w1i[i];
         }        
     }
     else 
     {
+        cout << "defVectorResampledToVolume_in " << defVectorResampledToVolume_in;
         //Give out upsampled deformation : Note sz = m*n*o
         *depth_out=m; //*
         *height_out=n; //*
         *width_out=o; //*        
         for (int i = 0; i < sz; i++)
         {
-            flow_U_out[i] = ux[i];
-            flow_V_out[i] = vx[i];
-            flow_W_out[i] = wx[i];
+            flow_U_out[i] = ux[i];flow_flattened_out[i] = ux[i];
+            flow_V_out[i] = vx[i];flow_flattened_out[i + sz] = vx[i];
+            flow_W_out[i] = wx[i];flow_flattened_out[i + sz * 2] = wx[i];
         }
     }
 
