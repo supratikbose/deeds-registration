@@ -294,11 +294,11 @@ void warpAffineS(short *warped, short *input, float *X, float *u1, float *v1, fl
     int n = image_n;
     int o = image_o;
     int sz = m * n * o;
-    for (int k = 0; k < o; k++)
+    for (int k = 0; k < o; k++) //Over depth = o
     {
-        for (int j = 0; j < n; j++)
+        for (int j = 0; j < n; j++) //Over height = n
         {
-            for (int i = 0; i < m; i++)
+            for (int i = 0; i < m; i++) //Over width = m
             {
 
                 float y1 = (float)i * X[0] + (float)j * X[1] + (float)k * X[2] + (float)X[3] + v1[i + j * m + k * m * n];

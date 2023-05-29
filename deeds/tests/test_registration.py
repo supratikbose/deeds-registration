@@ -11,15 +11,35 @@ class TestStringMethods(unittest.TestCase):
     def test_deeds_registration(self):
         fixed = np.transpose(nib.load('samples/fixed.nii.gz').get_fdata().astype('float32'), (2,1,0)) #axial = depth = 1st axis
         moving = np.transpose(nib.load('samples/moving.nii.gz').get_fdata().astype('float32'), (2,1,0)) #axial = depth = 1st axis 
-        vol_MStar_Deeds, deformVec_Deeds, deformVec_Deeds_flattened, defVecShape = registration(moving, fixed, False)
-        print(f'defVecShape {defVecShape}')
-        mse_b4Def = mse(fixed,  moving,)
-        mse_afterDef = mse(fixed, vol_MStar_Deeds)
+        
+        # depth=204 
+        # startDepth = 128 - depth//2
+        # height=224
+        # startHeight = 128 - height//2
+        # width=256 
+        # startWidth = 128 - width//2
+        # vol_M = moving[startDepth:(startDepth+depth), startHeight:(startHeight+height), startWidth:(startWidth+width)]
+        # print(f'vol_M.shape: {vol_M.shape} type: {vol_M.dtype} min: {np.min(vol_M)} max: {np.max(vol_M)}')
+        # vol_F = fixed[startDepth:(startDepth+depth), startHeight:(startHeight+height), startWidth:(startWidth+width)]
+        # print(f'vol_F.shape: {vol_F.shape} type: {vol_F.dtype} min: {np.min(vol_F)} max: {np.max(vol_F)}') 
+        vol_M = moving
+        vol_F = fixed
+
+        defVectorResampledToVolume_in=True
+        saveNPZFilePath= 'samples/deedsResultTmpFullResolution.npz' if True==defVectorResampledToVolume_in else 'samples/deedsResultTmp.npz'
+
+        vol_MStar_Deeds, deformVec_Deeds, deformVec_Deeds_flattened, defVecShape = registration(vol_M, vol_F, defVectorResampledToVolume_in)
+        print(f'vol_MStar_Deeds shape {vol_MStar_Deeds.shape}')
+        print(f'defVectorResampledToVolume_in {defVectorResampledToVolume_in} defVecShape {defVecShape}')
+        print(f'deformVec_Deeds shape {deformVec_Deeds.shape} deformVec_Deeds_flattened shape {deformVec_Deeds_flattened.shape}')
+        mse_b4Def = mse(vol_F,  vol_M,)
+        mse_afterDef = mse(vol_F, vol_MStar_Deeds)
         print(f"MSE B4:{round(mse_b4Def,4)} after: {round(mse_afterDef,4)}")
         deformVec_Deeds_flattened_reshaped = np.reshape(deformVec_Deeds_flattened, deformVec_Deeds.shape)
         print(f'Shaped and flatten defVec close? {np.allclose(deformVec_Deeds_flattened_reshaped,deformVec_Deeds)}')
         print(f'Sum of difference between shaped and flattened: {np.sum(deformVec_Deeds-deformVec_Deeds_flattened_reshaped)}')
-        np.savez_compressed('samples/deedsResultTmp.npz',vol_MStar_Deeds=vol_MStar_Deeds, deformVec_Deeds=deformVec_Deeds, deformVec_Deeds_flattened=deformVec_Deeds_flattened) 
+        
+        np.savez_compressed(saveNPZFilePath, vol_MStar_Deeds=vol_MStar_Deeds, deformVec_Deeds=deformVec_Deeds, deformVec_Deeds_flattened=deformVec_Deeds_flattened) 
 
 
     # def test_deeds_registration(self):

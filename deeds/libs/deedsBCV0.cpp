@@ -309,9 +309,9 @@ void deeds(float *im1, float *im1b, float *warped1,
     {
         cout << "defVectorResampledToVolume_in " << defVectorResampledToVolume_in;
         //int *depth_out, int *height_out, int *width_out,
-        *depth_out=m1; //*
+        *width_out=m1; //*
         *height_out=n1;//*
-        *width_out=o1; //*
+        *depth_out=o1; //*
         //float *flow = new float[sz1 * 3];float *flow_W_out, float *flow_V_out, float *flow_U_out,
         for (int i = 0; i < sz1; i++)
         {
@@ -325,9 +325,9 @@ void deeds(float *im1, float *im1b, float *warped1,
     {
         cout << "defVectorResampledToVolume_in " << defVectorResampledToVolume_in;
         //Give out upsampled deformation : Note sz = m*n*o
-        *depth_out=m; //*
+        *width_out=m; //*
         *height_out=n; //*
-        *width_out=o; //*        
+        *depth_out=o; //*        
         for (int i = 0; i < sz; i++)
         {
             flow_U_out[i] = ux[i];flow_flattened_out[i] = ux[i];

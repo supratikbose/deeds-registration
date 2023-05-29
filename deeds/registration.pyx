@@ -49,36 +49,40 @@ def registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=Fals
     fixed_np = fixed_vol_np.copy() #to_numpy(fixed)
 
     origin_type = moving_np.dtype
-    shape = moving_np.shape
+    origin_shape = moving_np.shape
+    
 
-    fixed_np = fixed_np.flatten().astype(np.float32)
-    moving_np = moving_np.flatten().astype(np.float32)
-    moved_np = np.zeros(moving_np.shape).flatten().astype(np.float32)  
+    fixed_np_flatten = fixed_np.flatten().astype(np.float32)
+    moving_np_flatten = moving_np.flatten().astype(np.float32)
+    moved_np_flatten = np.zeros_like(moving_np_flatten) #(moving_np.shape).flatten().astype(np.float32)  
 
-    inputSize = shape[0] * shape[1] * shape[2]
+    inputSize = origin_shape[0] * origin_shape[1] * origin_shape[2]
     flow_flattened_out_np    = np.zeros(3*inputSize, np.float32)
     flow_W_out_flatten  = np.zeros(inputSize, np.float32)
     flow_V_out_flatten  = np.zeros(inputSize, np.float32)
     flow_U_out_flatten  = np.zeros(inputSize, np.float32)
     
     depth_out, height_out, width_out = deeds_cpp( 
-        moving_np,
-        fixed_np, 
-        moved_np,
+        moving_np_flatten,
+        fixed_np_flatten, 
+        moved_np_flatten,
         flow_flattened_out_np, 
         flow_W_out_flatten, 
         flow_V_out_flatten, 
         flow_U_out_flatten, 
-        shape, 
+        origin_shape, 
         defVectorResampledToVolume_in,
         alpha, levels, verbose)
+    print(f'Input shape: {origin_shape}')
+    print(f'defVectorResampledToVolume_in: {defVectorResampledToVolume_in}')
+    print(f'Output shape: ({depth_out},{height_out},{width_out})')
 
     #Check defVec dimension
     if True==defVectorResampledToVolume_in:
-        assert depth_out==shape[0] and height_out==shape[1] and width_out==shape[2], \
+        assert depth_out==origin_shape[0] and height_out==origin_shape[1] and width_out==origin_shape[2], \
             f' Unexpected output dimension.'
         defVecSize = inputSize
-        defVecShape = shape
+        defVecShape = origin_shape
     else:
         defVecSize = depth_out *  height_out * width_out #depth_out.item() *  height_out.item() * width_out.item()
         defVecShape = tuple([depth_out, height_out, width_out]) #tuple(depth_out.item(), height_out.item(), width_out.item())
@@ -88,7 +92,7 @@ def registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=Fals
         flow_U_out_flatten = flow_U_out_flatten[:defVecSize]
 
     #Reshape to 3D
-    moved_np = np.reshape(moved_np, shape).astype(origin_type)
+    moved_np = np.reshape(moved_np_flatten, origin_shape).astype(origin_type)
     flow_W_np = np.reshape(flow_W_out_flatten, defVecShape)
     flow_V_np = np.reshape(flow_V_out_flatten, defVecShape)
     flow_U_np = np.reshape(flow_U_out_flatten, defVecShape)
