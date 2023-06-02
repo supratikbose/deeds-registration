@@ -26,16 +26,46 @@ pip install git+https://github.com/supratikbose/deeds-registration
 ```
 from deeds import registration
 import SimpleITK as sitk
-
+#Volumes are expected to be have identical dimension and identical isometric pixel spacing 
 fixed_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(fixed_PATH))
 moving_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(moving_PATH))
+#Invoke Deeds
+moved_vol_np, flow_3channelUVW_np, flow_flattened_out_np, defVecShape = registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=False,  alpha=1.6, levels=5, verbose=True)
 
-#In the return value  moved_vol_np  is single channel np array  and flow_3channel_np is 3 channel numpy array
-#It is assumed that in the shape, 1st dimension is depth(Z) followed by height(Y) and width(Z)
-#In the 3 channel deformation vector, 1st channel is Ux (along X), 2nd channel is Vy(along Y) and last channel is Wz (along Z)
-# flow_flattened_out_np is what would have been given out in deformation_dat. 
-#defVectorResampledToVolume_in is typically false so defVec dimension is less than image dimension
-moved_vol_np, flow_3channel_np, flow_flattened_out_np, defVecShape = registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=False, alpha=1.6, levels=5, verbose=True)
+#Interpreting input and result
+#In the input and result volumes, i.e., in  fixed_vol_np, fixed_vol_np and in moved_vol_np we assume the 1st dimension is depth(Z of size o) followed #by height(Y of size n) and finally width(Z of size m). 
+#Deformation vector is given out in 3-channel flow_3channelUVW_np where channels are of the order [U,V,W]
+#Examining deeds/libs/dataCostD.h/warpAffine() we interprete U,V,W as follows:
+# During warping, fastest (innermost) loop is along W (size m); next along H (size n) and finally along D (size o). Moreover
+# U modifies x  where  x => min(max(x,0),n-1) => So x is along H!! and U  modifies along  H (of size n)
+# V modifies y  where  y => min(max(y,0),m-1) => So y is along W!! and V  modifies along  W (of size m)
+# W modifies z  where  z => min(max(z,0),o-1) => So z is along D   and W  modifies along  D (of size o)    
+#If defVectorResampledToVolume_in is false, it is of lower resolution than the input / output volume. If is is true, it matches volume dimension.
+
+#Given deformation vector output flow_3channelUVW_np at full resolution (i.e. defVectorResampledToVolume_in=True), one can us MONAI (1.1) to warp the #moving image to generate moved image outside Deeds as below:
+
+def deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW, flow_3channelUVW_np):
+
+    import torch
+    from monai.networks.blocks import Warp as monai_warp
+    a_monai_warp_transformer = monai_warp(mode='bilinear', padding_mode='border')
+    
+    vol_M_torch = torch.from_numpy(vol_M_DHW.astype('float32'))
+    #Get u,v,w components from deeds_defVec
+    u= torch.from_numpy(flow_3channelUVW_np[0,...].astype('float32'))
+    v= torch.from_numpy(flow_3channelUVW_np[1,...].astype('float32'))
+    w= torch.from_numpy(flow_3channelUVW_np[2,...].astype('float32'))
+
+    #Add batch channel
+    vol_M_torch_bc = vol_M_torch.unsqueeze(0).unsqueeze(0)
+    #NOTE Since volume is in DHW, and from deeds we know w along D, u along H and v along w 
+    #we need to pack deformation field in same DHW order. We also add batch and channel
+    ddf_bc = torch.stack([w,u,v], dim=0).unsqueeze(0)
+
+    #Apply Monai warp
+    vol_MStarLocalDeeds_monai_torch = a_monai_warp_transformer(vol_M_torch_bc,  ddf_bc)
+    return vol_MStarLocalDeeds_monai_torch.squeeze().detach().cpu().numpy().astype('float')
+
 ```
 
 ## Prerequesities
