@@ -30,19 +30,32 @@ import SimpleITK as sitk
 fixed_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(fixed_PATH))
 moving_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(moving_PATH))
 #Invoke Deeds
-moved_vol_np, flow_3channelUVW_np, flow_flattened_out_np, defVecShape = registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=False,  alpha=1.6, levels=5, verbose=True)
+moved_vol_np, flow_3channelUVW_np, flow_flattened_out_np, defVecShape =\
+registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=False,\
+alpha=1.6, levels=5, verbose=True)
 
 #Interpreting input and result
-#In the input and result volumes, i.e., in  fixed_vol_np, fixed_vol_np and in moved_vol_np we assume the 1st dimension is depth(Z of size o) followed #by height(Y of size n) and finally width(Z of size m). 
-#Deformation vector is given out in 3-channel flow_3channelUVW_np where channels are of the order [U,V,W]
-#Examining deeds/libs/dataCostD.h/warpAffine() we interprete U,V,W as follows:
-# During warping, fastest (innermost) loop is along W (size m); next along H (size n) and finally along D (size o). Moreover
-# U modifies x  where  x => min(max(x,0),n-1) => So x is along H!! and U  modifies along  H (of size n)
-# V modifies y  where  y => min(max(y,0),m-1) => So y is along W!! and V  modifies along  W (of size m)
-# W modifies z  where  z => min(max(z,0),o-1) => So z is along D   and W  modifies along  D (of size o)    
-#If defVectorResampledToVolume_in is false, it is of lower resolution than the input / output volume. If is is true, it matches volume dimension.
+#In the input and result volumes, i.e., in  moving_vol_np, fixed_vol_np and in 
+#moved_vol_np we assume the 1st dimension is depth(Z of size o) followed by 
+#height(Y of size n) and finally width(X of size m). Deformation vector is 
+# also given out in 3-channel flow_3channelUVW_np where channels are of the 
+# order [U,V,W]
 
-#Given deformation vector output flow_3channelUVW_np at full resolution (i.e. defVectorResampledToVolume_in=True), one can us MONAI (1.1) to warp the #moving image to generate moved image outside Deeds as below:
+#Examining deeds/libs/dataCostD.h/warpAffine() we interprete U,V,W as follows:
+# During warping, fastest (innermost) loop is along W (size m); next 
+# along H (size n) and finally along D (size o). Moreover
+#U modifies x with x limit betwee 0 and N!! so U is displacement along 2nd dimension!! i.e., Height
+# V modifies y with y limit betwee 0 and M!! so V is displacement along 3rd dimension!! i.e., Width
+# W modifies z with z limit betwee 0 and O!! so W is displacement along 1st dimension!! i.e., Depth
+
+#If defVectorResampledToVolume_in is false, it is of lower resolution than the input / output 
+# volume. It is the same output whose flattened version is deformations.dat file.
+# If defVectorResampledToVolume_in flag is true, flow_3channelUVW_np, and 
+# flow_flattened_out_np are in full volume dimension.
+
+#vGiven deformation vector output flow_3channelUVW_np at full resolution (i.e. 
+# defVectorResampledToVolume_in=True), one can use MONAI (1.1) to warp the 
+#vmoving image to generate moved image outside Deeds as below:
 
 def deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW, flow_3channelUVW_np):
 
