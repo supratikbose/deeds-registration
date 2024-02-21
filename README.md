@@ -24,6 +24,9 @@ pip install git+https://github.com/supratikbose/deeds-registration
 
 ## Usage
 ```
+#See usage.ipynb
+
+#Install : pip install git+https://github.com/supratikbose/deeds-registration
 from deeds import registration
 import SimpleITK as sitk
 #Volumes are expected to be have identical dimension and identical isometric pixel spacing 
@@ -31,8 +34,7 @@ fixed_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(fixed_PATH))
 moving_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(moving_PATH))
 #Invoke Deeds
 moved_vol_np, flow_3channelUVW_np, flow_flattened_out_np, defVecShape =\
-registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=False,\
-alpha=1.6, levels=5, verbose=True)
+    registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=True,alpha=1.6, levels=5, verbose=True)
 
 #Interpreting input and result
 #In the input and result volumes, i.e., in  moving_vol_np, fixed_vol_np and in 
@@ -53,9 +55,11 @@ alpha=1.6, levels=5, verbose=True)
 # If defVectorResampledToVolume_in flag is true, flow_3channelUVW_np, and 
 # flow_flattened_out_np are in full volume dimension.
 
-#vGiven deformation vector output flow_3channelUVW_np at full resolution (i.e. 
+
+#Helper function to deform volume using DVF returned by DEEDS
+#Given deformation vector output flow_3channelUVW_np at full resolution (i.e. 
 # defVectorResampledToVolume_in=True), one can use MONAI (1.1) to warp the 
-#vmoving image to generate moved image outside Deeds as below:
+#moving image to generate moved image outside Deeds as below:
 
 def deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW, flow_3channelUVW_np):
 
@@ -78,6 +82,25 @@ def deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW, flow_3channelUVW_np):
     #Apply Monai warp
     vol_MStarLocalDeeds_monai_torch = a_monai_warp_transformer(vol_M_torch_bc,  ddf_bc)
     return vol_MStarLocalDeeds_monai_torch.squeeze().detach().cpu().numpy().astype('float')
+
+#Use  deformation vector returned by DEEDS to deform moving volume "locally" 
+# and check mean square error (mse)
+
+#Install : pip install sewar
+from sewar.full_ref import mse
+locally_moved_vol_np = deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW=moving_vol_np, flow_3channelUVW_np=flow_3channelUVW_np)
+#MSE before deformation
+mse_b4Def = mse(fixed_vol_np,  moving_vol_np)
+print(f'mse before deformation {round(mse_b4Def,6)}') #mse_b4Def 0.002815
+#MSE after deformation using DEEDS
+mse_afterDef_Deeds = mse(fixed_vol_np,  moved_vol_np)
+print(f'mse after deformation using Deeds {round(mse_afterDef_Deeds,6)}') #mse_afterDef_Deeds 0.000678
+#MSE after local deformation using DVF returned by DEEDS
+mse_afterLocalDef_Deeds_monai = mse(fixed_vol_np,  locally_moved_vol_np)
+print(f'mse_afterLocalDef_Deeds_monai {round(mse_afterLocalDef_Deeds_monai,6)}') #mse_afterLocalDef_Deeds_monai 0.000678
+#MSE between two deformed volumes (by DEEDS and by local deformation using DVF returned by DEEDS)
+mse_between_two_methods = mse(moved_vol_np,  locally_moved_vol_np)
+print(f' between two deformed volumes {round(mse_between_two_methods,6)}') #mse_between_two_methods 0.0
 
 ```
 
