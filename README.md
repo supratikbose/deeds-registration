@@ -34,7 +34,8 @@ fixed_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(fixed_PATH))
 moving_vol_np = sitk.GetArrayFromImage(sitk.ReadImage(moving_PATH))
 #Invoke Deeds
 moved_vol_np, flow_3channelUVW_np, flow_flattened_out_np, defVecShape =\
-    registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=True,alpha=1.6, levels=5, verbose=True)
+    registration(moving_vol_np, fixed_vol_np, defVectorResampledToVolume_in=True,alpha=1.6,\
+    levels=5, verbose=True)
 
 #Interpreting input and result
 #In the input and result volumes, i.e., in  moving_vol_np, fixed_vol_np and in 
@@ -46,9 +47,12 @@ moved_vol_np, flow_3channelUVW_np, flow_flattened_out_np, defVecShape =\
 #Examining deeds/libs/dataCostD.h/warpAffine() we interprete U,V,W as follows:
 # During warping, fastest (innermost) loop is along W (size m); next 
 # along H (size n) and finally along D (size o). Moreover
-#U modifies x with x limit betwee 0 and N!! so U is displacement along 2nd dimension!! i.e., Height
-# V modifies y with y limit betwee 0 and M!! so V is displacement along 3rd dimension!! i.e., Width
-# W modifies z with z limit betwee 0 and O!! so W is displacement along 1st dimension!! i.e., Depth
+#U modifies x with x limit betwee 0 and N!! so U is displacement along 2nd dimension!! 
+#i.e., Height
+# V modifies y with y limit betwee 0 and M!! so V is displacement along 3rd dimension!! 
+#i.e., Width
+# W modifies z with z limit betwee 0 and O!! so W is displacement along 1st dimension!! 
+#i.e., Depth
 
 #If defVectorResampledToVolume_in is false, it is of lower resolution than the input / output 
 # volume. It is the same output whose flattened version is deformations.dat file.
@@ -88,19 +92,24 @@ def deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW, flow_3channelUVW_np):
 
 #Install : pip install sewar
 from sewar.full_ref import mse
-locally_moved_vol_np = deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW=moving_vol_np, flow_3channelUVW_np=flow_3channelUVW_np)
+locally_moved_vol_np = deformUsingDeedsDefVecAndMonaiWarp(vol_M_DHW=moving_vol_np,\
+ flow_3channelUVW_np=flow_3channelUVW_np)
 #MSE before deformation
 mse_b4Def = mse(fixed_vol_np,  moving_vol_np)
-print(f'mse before deformation {round(mse_b4Def,6)}') #mse_b4Def 0.002815
+print(f'mse before deformation {round(mse_b4Def,6)}') 
+#mse_b4Def 0.002815
 #MSE after deformation using DEEDS
 mse_afterDef_Deeds = mse(fixed_vol_np,  moved_vol_np)
-print(f'mse after deformation using Deeds {round(mse_afterDef_Deeds,6)}') #mse_afterDef_Deeds 0.000678
+print(f'mse after deformation using Deeds {round(mse_afterDef_Deeds,6)}') 
+#mse_afterDef_Deeds 0.000678
 #MSE after local deformation using DVF returned by DEEDS
 mse_afterLocalDef_Deeds_monai = mse(fixed_vol_np,  locally_moved_vol_np)
-print(f'mse_afterLocalDef_Deeds_monai {round(mse_afterLocalDef_Deeds_monai,6)}') #mse_afterLocalDef_Deeds_monai 0.000678
-#MSE between two deformed volumes (by DEEDS and by local deformation using DVF returned by DEEDS)
+print(f'mse_afterLocalDef_Deeds_monai {round(mse_afterLocalDef_Deeds_monai,6)}') 
+#mse_afterLocalDef_Deeds_monai 0.000678
+#MSE between two deformed volumes (by DEEDS and by local deformation using DEEDS DVF)
 mse_between_two_methods = mse(moved_vol_np,  locally_moved_vol_np)
-print(f' between two deformed volumes {round(mse_between_two_methods,6)}') #mse_between_two_methods 0.0
+print(f' between two deformed volumes {round(mse_between_two_methods,6)}') 
+#mse_between_two_methods 0.0
 
 ```
 
